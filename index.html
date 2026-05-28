@@ -314,7 +314,12 @@ const sb = {
       method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
       body: JSON.stringify({email, password:pass})
     });
-    return r.json();
+    const d = await r.json();
+    // Supabase returns user:null when email confirmation is required
+    if (d.error) throw new Error(d.error.message || d.msg || 'Error al registrarse');
+    if (!d.user && !d.access_token) throw new Error('CONFIRM_EMAIL');
+    if (d.access_token && d.user) { sb._token = d.access_token; sb._uid = d.user.id; }
+    return d;
   },
   async signIn(email, pass) {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -322,7 +327,8 @@ const sb = {
       body: JSON.stringify({email, password:pass})
     });
     const d = await r.json();
-    if (d.access_token) { sb._token = d.access_token; sb._uid = d.user.id; }
+    if (d.error) throw new Error(d.error.message || d.msg || 'Error al iniciar sesión');
+    if (d.access_token && d.user) { sb._token = d.access_token; sb._uid = d.user.id; }
     return d;
   },
   async signOut() {
@@ -450,11 +456,15 @@ window.submitAuth = async () => {
   try {
     if (authMode === 'register') {
       const d = await sb.signUp(email, pass);
-      if (d.error) throw new Error(d.error.message || d.msg);
-      showAuthInfo('✅ Cuenta creada. Revisa tu email para confirmar y luego inicia sesión.');
+      if (d.access_token && d.user) {
+        localStorage.setItem('sb_session', JSON.stringify(d));
+        showApp({id: d.user.id, email: d.user.email});
+      } else {
+        showAuthInfo('✅ Cuenta creada. Revisa tu email y confirma el enlace, luego inicia sesión. 💡 Tip: en Supabase → Authentication → Providers → Email desactiva "Confirm email" para entrar directamente.');
+      }
     } else {
       const d = await sb.signIn(email, pass);
-      if (d.error) throw new Error(d.error.message || d.msg);
+      if (!d.user) throw new Error('No se pudo iniciar sesión. ¿Confirmaste tu email?');
       localStorage.setItem('sb_session', JSON.stringify(d));
       showApp({id: d.user.id, email: d.user.email});
     }
