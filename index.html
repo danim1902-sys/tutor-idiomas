@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutor de Idiomas</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#0e0e14;color:#e8e6f0;min-height:100vh}
+.bg-glow{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+background:radial-gradient(ellipse at 20% 20%,rgba(83,74,183,.12) 0%,transparent 60%),
+radial-gradient(ellipse at 80% 70%,rgba(13,158,117,.08) 0%,transparent 50%)}
+.container{max-width:980px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* AUTH */
+#authScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.auth-card{background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.1);border-radius:24px;
+padding:48px 40px;max-width:420px;width:100%;text-align:center}
+.auth-logo{font-size:48px;margin-bottom:16px}
+.auth-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;
+background:linear-gradient(135deg,#e8e6f0 30%,#afa9ec 70%,#5dcaa5 100%);
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.auth-sub{font-size:14px;color:#6e6b80;margin-bottom:32px;line-height:1.6}
+.auth-input{width:100%;background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.12);
+border-radius:12px;color:#e8e6f0;font-family:'DM Sans',sans-serif;font-size:14px;
+padding:12px 16px;outline:none;margin-bottom:10px;transition:border-color .2s}
+.auth-input:focus{border-color:rgba(83,74,183,.5)}
+.auth-input::placeholder{color:#4a4762}
+.btn-primary{width:100%;background:linear-gradient(135deg,#534ab7,#3b8cda);border:none;
+border-radius:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+padding:12px;cursor:pointer;transition:opacity .2s,transform .15s;margin-bottom:10px}
+.btn-primary:hover{opacity:.9}
+.btn-primary:active{transform:scale(.98)}
+.auth-toggle{font-size:13px;color:#6e6b80;margin-top:16px}
+.auth-toggle a{color:#afa9ec;cursor:pointer;text-decoration:none}
+.auth-toggle a:hover{text-decoration:underline}
+.auth-error{background:rgba(226,75,74,.12);border:.5px solid rgba(226,75,74,.3);border-radius:10px;
+padding:10px 14px;font-size:13px;color:#f09595;margin-bottom:12px;display:none;text-align:left}
+.auth-msg{background:rgba(93,202,165,.1);border:.5px solid rgba(93,202,165,.3);border-radius:10px;
+padding:10px 14px;font-size:13px;color:#5dcaa5;margin-bottom:12px;display:none}
+
+/* MAIN */
+#mainApp{display:none}
+header{padding:40px 0 28px;text-align:center}
+.logo-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(83,74,183,.18);
+border:.5px solid rgba(83,74,183,.4);border-radius:99px;padding:6px 16px;
+font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#afa9ec;margin-bottom:20px}
+h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(32px,5vw,56px);font-weight:700;line-height:1.1;
+background:linear-gradient(135deg,#e8e6f0 30%,#afa9ec 70%,#5dcaa5 100%);
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.subtitle{font-size:15px;color:#9895a8;max-width:460px;margin:0 auto 16px;line-height:1.6}
+.user-bar{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px}
+.user-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);
+border:.5px solid rgba(255,255,255,.1);border-radius:99px;padding:6px 14px;font-size:13px;color:#9895a8}
+.user-chip strong{color:#e8e6f0}
+.btn-logout{background:transparent;border:.5px solid rgba(255,255,255,.1);border-radius:99px;
+color:#6e6b80;font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 14px;cursor:pointer;transition:all .2s}
+.btn-logout:hover{border-color:rgba(226,75,74,.4);color:#f09595}
+.section-title{font-family:'Playfair Display',serif;font-size:20px;color:#e8e6f0;
+margin-bottom:16px;font-weight:600;display:flex;align-items:center;gap:10px}
+
+/* LANG GRID */
+.lang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:40px}
+.lang-card{background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.1);border-radius:16px;
+padding:18px 14px;text-align:center;cursor:pointer;transition:all .22s cubic-bezier(.4,0,.2,1);
+position:relative;overflow:hidden}
+.lang-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .22s;border-radius:16px}
+.lang-card:hover{border-color:rgba(175,169,236,.5);transform:translateY(-3px)}
+.lang-card:hover::before{opacity:1}
+.lang-card.it::before{background:radial-gradient(circle at top,rgba(13,158,117,.15),transparent 70%)}
+.lang-card.fr::before{background:radial-gradient(circle at top,rgba(83,74,183,.15),transparent 70%)}
+.lang-card.de::before{background:radial-gradient(circle at top,rgba(218,90,48,.12),transparent 70%)}
+.lang-card.ja::before{background:radial-gradient(circle at top,rgba(212,83,126,.12),transparent 70%)}
+.lang-card.pt::before{background:radial-gradient(circle at top,rgba(99,153,34,.12),transparent 70%)}
+.lang-card.zh::before{background:radial-gradient(circle at top,rgba(186,117,23,.14),transparent 70%)}
+.lang-card.la::before{background:radial-gradient(circle at top,rgba(127,119,221,.12),transparent 70%)}
+.lang-card.eo::before{background:radial-gradient(circle at top,rgba(13,158,117,.1),transparent 70%)}
+.lang-card.gl::before{background:radial-gradient(circle at top,rgba(55,138,221,.12),transparent 70%)}
+.lang-card.ca::before{background:radial-gradient(circle at top,rgba(218,90,48,.12),transparent 70%)}
+.lang-card.eu::before{background:radial-gradient(circle at top,rgba(175,169,236,.12),transparent 70%)}
+.lang-card.active{border-color:#534ab7;background:rgba(83,74,183,.18)}
+.lang-flag{font-size:30px;margin-bottom:8px;display:block}
+.lang-name{font-size:13px;font-weight:500;color:#e8e6f0;margin-bottom:2px}
+.lang-native{font-size:10px;color:#6e6b80}
+.lang-level{font-size:10px;color:#5dcaa5;margin-top:4px;font-weight:500;display:none}
+.lang-card.has-progress .lang-level{display:block}
+
+/* STATS */
+.progress-section{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:40px}
+.stat-card{background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 18px}
+.stat-label{font-size:11px;color:#6e6b80;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.stat-val{font-size:24px;font-weight:500;color:#e8e6f0}
+.stat-sub{font-size:11px;color:#5dcaa5;margin-top:2px}
+
+/* CHAT */
+.chat-section{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.08);
+border-radius:24px;overflow:hidden;margin-bottom:40px}
+.chat-header{padding:16px 22px;border-bottom:.5px solid rgba(255,255,255,.07);
+display:flex;align-items:center;gap:12px;background:rgba(83,74,183,.08);justify-content:space-between}
+.chat-header-left{display:flex;align-items:center;gap:12px}
+.tutor-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#534ab7,#1d9e75);
+display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tutor-info .name{font-size:14px;font-weight:500;color:#e8e6f0}
+.tutor-info .status{font-size:11px;color:#5dcaa5;display:flex;align-items:center;gap:4px}
+.status-dot{width:5px;height:5px;background:#5dcaa5;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-save{background:rgba(93,202,165,.12);border:.5px solid rgba(93,202,165,.3);border-radius:99px;
+color:#5dcaa5;font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 14px;cursor:pointer;
+transition:all .2s;display:none}
+.btn-save:hover{background:rgba(93,202,165,.2)}
+.btn-save.visible{display:block}
+.messages{padding:22px;min-height:300px;max-height:440px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.msg{display:flex;gap:10px;max-width:88%;animation:fadeUp .3s ease}
+.msg.user{flex-direction:row-reverse;align-self:flex-end}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-bubble{padding:11px 15px;border-radius:16px;font-size:14px;line-height:1.65}
+.msg.tutor .msg-bubble{background:rgba(83,74,183,.15);border:.5px solid rgba(83,74,183,.25);border-top-left-radius:4px;color:#e8e6f0}
+.msg.user .msg-bubble{background:rgba(93,202,165,.15);border:.5px solid rgba(93,202,165,.25);border-top-right-radius:4px;color:#e8e6f0}
+.msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#534ab7,#1d9e75);
+display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:2px}
+.msg.user .msg-avatar{background:rgba(93,202,165,.2)}
+.typing{display:flex;gap:4px;padding:12px 16px;background:rgba(83,74,183,.15);border:.5px solid rgba(83,74,183,.25);
+border-radius:16px;border-top-left-radius:4px;width:fit-content;align-items:center}
+.typing span{width:5px;height:5px;background:#afa9ec;border-radius:50%;animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.quick-btns{display:flex;gap:8px;flex-wrap:wrap;padding:4px 22px 10px}
+.quick-btn{background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.12);border-radius:99px;
+color:#9895a8;font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 14px;cursor:pointer;transition:all .18s}
+.quick-btn:hover{border-color:rgba(175,169,236,.4);color:#afa9ec;background:rgba(83,74,183,.1)}
+.input-area{padding:14px 18px;border-top:.5px solid rgba(255,255,255,.07);display:flex;gap:10px;align-items:flex-end}
+.input-area textarea{flex:1;background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.12);
+border-radius:12px;color:#e8e6f0;font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 14px;
+resize:none;min-height:42px;max-height:120px;outline:none;transition:border-color .2s;line-height:1.5}
+.input-area textarea:focus{border-color:rgba(83,74,183,.5)}
+.input-area textarea::placeholder{color:#4a4762}
+.send-btn{width:42px;height:42px;background:linear-gradient(135deg,#534ab7,#3b8cda);border:none;
+border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+flex-shrink:0;transition:transform .15s,opacity .15s;color:#fff;font-size:16px}
+.send-btn:hover{transform:scale(1.05)}
+.send-btn:active{transform:scale(.96)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* HISTORY */
+.session-list{display:flex;flex-direction:column;gap:8px;margin-bottom:48px}
+.session-item{background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.07);
+border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.session-lang{font-size:14px;font-weight:500;color:#e8e6f0;margin-bottom:2px}
+.session-meta{font-size:12px;color:#6e6b80}
+.session-badge{background:rgba(83,74,183,.2);border:.5px solid rgba(83,74,183,.3);
+border-radius:99px;padding:3px 10px;font-size:11px;color:#afa9ec}
+.empty-history{font-size:14px;color:#4a4762;text-align:center;padding:24px}
+
+footer{text-align:center;padding:28px 0;font-size:12px;color:#4a4762;border-top:.5px solid rgba(255,255,255,.06)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+background:rgba(93,202,165,.15);border:.5px solid rgba(93,202,165,.35);border-radius:99px;
+padding:10px 20px;font-size:13px;color:#5dcaa5;opacity:0;transition:all .3s;z-index:100;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:rgba(226,75,74,.12);border-color:rgba(226,75,74,.3);color:#f09595}
+
+/* CONFIG BANNER */
+.config-banner{background:rgba(186,117,23,.1);border:.5px solid rgba(186,117,23,.35);
+border-radius:16px;padding:16px 20px;margin-bottom:24px;font-size:13px;color:#e8c97a;line-height:1.7;display:none}
+.config-banner.visible{display:block}
+.config-banner code{background:rgba(0,0,0,.3);border-radius:6px;padding:2px 7px;font-size:12px;color:#f0d898}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+
+<!-- AUTH -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">🎓</div>
+    <div class="auth-title">Tutor de Idiomas</div>
+    <p class="auth-sub">Inicia sesión para guardar tu progreso en cualquier dispositivo con Supabase.</p>
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-msg" id="authMsg"></div>
+    <input class="auth-input" type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email"/>
+    <input class="auth-input" type="password" id="authPass" placeholder="Contraseña (mín. 6 caracteres)" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')submitAuth()"/>
+    <button class="btn-primary" onclick="submitAuth()" id="authBtn">Entrar</button>
+    <div class="auth-toggle" id="authToggle">
+      ¿No tienes cuenta? <a onclick="toggleMode()">Regístrate gratis</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+<div class="container">
+
+  <div class="config-banner" id="configBanner">
+    ⚠️ <strong>Configura Supabase</strong> — Edita las variables al inicio de <code>index.html</code>:<br>
+    <code>SUPABASE_URL</code> y <code>SUPABASE_ANON_KEY</code> con los datos de tu proyecto.
+    <a href="https://supabase.com/dashboard" target="_blank" style="color:#f0d898;margin-left:6px">→ Ir a Supabase Dashboard</a>
+  </div>
+
+  <header>
+    <div class="logo-badge">✦ Inteligencia Lingüística</div>
+    <h1>Tutor de Idiomas</h1>
+    <p class="subtitle">Aprende con un tutor experto. Sesiones de 10–25 min para un progreso real y duradero.</p>
+    <div class="user-bar">
+      <div class="user-chip">👤 <strong id="userEmail">—</strong></div>
+      <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div class="section-title">Elige tu idioma</div>
+  <div class="lang-grid">
+    <div class="lang-card it" data-lang="italiano" data-code="it" onclick="selectLang(this)">
+      <span class="lang-flag">🇮🇹</span><div class="lang-name">Italiano</div><div class="lang-native">Italiano</div><div class="lang-level" id="lv-it"></div></div>
+    <div class="lang-card fr" data-lang="francés" data-code="fr" onclick="selectLang(this)">
+      <span class="lang-flag">🇫🇷</span><div class="lang-name">Francés</div><div class="lang-native">Français</div><div class="lang-level" id="lv-fr"></div></div>
+    <div class="lang-card pt" data-lang="portugués" data-code="pt" onclick="selectLang(this)">
+      <span class="lang-flag">🇵🇹</span><div class="lang-name">Portugués</div><div class="lang-native">Português</div><div class="lang-level" id="lv-pt"></div></div>
+    <div class="lang-card de" data-lang="alemán" data-code="de" onclick="selectLang(this)">
+      <span class="lang-flag">🇩🇪</span><div class="lang-name">Alemán</div><div class="lang-native">Deutsch</div><div class="lang-level" id="lv-de"></div></div>
+    <div class="lang-card ja" data-lang="japonés" data-code="ja" onclick="selectLang(this)">
+      <span class="lang-flag">🇯🇵</span><div class="lang-name">Japonés</div><div class="lang-native">日本語</div><div class="lang-level" id="lv-ja"></div></div>
+    <div class="lang-card zh" data-lang="chino" data-code="zh" onclick="selectLang(this)">
+      <span class="lang-flag">🇨🇳</span><div class="lang-name">Chino</div><div class="lang-native">中文</div><div class="lang-level" id="lv-zh"></div></div>
+    <div class="lang-card la" data-lang="latín clásico" data-code="la" onclick="selectLang(this)">
+      <span class="lang-flag">🏛️</span><div class="lang-name">Latín</div><div class="lang-native">Latina</div><div class="lang-level" id="lv-la"></div></div>
+    <div class="lang-card eo" data-lang="esperanto" data-code="eo" onclick="selectLang(this)">
+      <span class="lang-flag">🌍</span><div class="lang-name">Esperanto</div><div class="lang-native">Esperanto</div><div class="lang-level" id="lv-eo"></div></div>
+    <div class="lang-card gl" data-lang="gallego" data-code="gl" onclick="selectLang(this)">
+      <span class="lang-flag">🏴󠁧󠁢󠁳󠁣󠁴󠁿</span><div class="lang-name">Gallego</div><div class="lang-native">Galego</div><div class="lang-level" id="lv-gl"></div></div>
+    <div class="lang-card ca" data-lang="catalán" data-code="ca" onclick="selectLang(this)">
+      <span class="lang-flag">🐴</span><div class="lang-name">Catalán</div><div class="lang-native">Català</div><div class="lang-level" id="lv-ca"></div></div>
+    <div class="lang-card eu" data-lang="vasco" data-code="eu" onclick="selectLang(this)">
+      <span class="lang-flag">🌿</span><div class="lang-name">Vasco</div><div class="lang-native">Euskara</div><div class="lang-level" id="lv-eu"></div></div>
+  </div>
+
+  <div class="section-title">Tu progreso global</div>
+  <div class="progress-section">
+    <div class="stat-card"><div class="stat-label">Idioma activo</div><div class="stat-val" id="statLang">—</div><div class="stat-sub" id="statLevel">Selecciona un idioma</div></div>
+    <div class="stat-card"><div class="stat-label">Sesiones totales</div><div class="stat-val" id="statSessions">0</div><div class="stat-sub">en todos los idiomas</div></div>
+    <div class="stat-card"><div class="stat-label">Vocabulario</div><div class="stat-val" id="statVocab">0</div><div class="stat-sub">palabras registradas</div></div>
+    <div class="stat-card"><div class="stat-label">Racha</div><div class="stat-val" id="statStreak">0 🔥</div><div class="stat-sub">días consecutivos</div></div>
+  </div>
+
+  <div class="section-title">Sesión de hoy</div>
+  <div class="chat-section">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="tutor-avatar">🎓</div>
+        <div class="tutor-info">
+          <div class="name">Tutor</div>
+          <div class="status"><span class="status-dot"></span> En línea</div>
+        </div>
+      </div>
+      <button class="btn-save" id="btnSave" onclick="saveSession()">💾 Guardar sesión</button>
+    </div>
+    <div class="messages" id="messages">
+      <div class="msg tutor">
+        <div class="msg-avatar">🎓</div>
+        <div class="msg-bubble">¡Bienvenido de nuevo! Selecciona el idioma que quieres practicar hoy. Tu progreso se sincroniza en la nube con Supabase. 🌟</div>
+      </div>
+    </div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="sendQuick('Quiero empezar desde cero')">Empezar desde cero</button>
+      <button class="quick-btn" onclick="sendQuick('Continuar donde lo dejé')">Continuar</button>
+      <button class="quick-btn" onclick="sendQuick('¿Qué aprendí en la última sesión?')">Repasar lo anterior</button>
+      <button class="quick-btn" onclick="sendQuick('Quiero practicar conversación hoy')">Conversación</button>
+    </div>
+    <div class="input-area">
+      <textarea id="userInput" placeholder="Escribe tu respuesta..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <div class="section-title">Historial de sesiones</div>
+  <div class="session-list" id="sessionList">
+    <div class="empty-history">Aún no hay sesiones guardadas. ¡Empieza hoy!</div>
+  </div>
+
+  <footer>Tutor de Idiomas · Progreso en Supabase · GitHub Pages · <span id="footerUser"></span></footer>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  🔧 CONFIGURA AQUÍ TUS CREDENCIALES DE SUPABASE
+//  Encuéntralas en: supabase.com → tu proyecto → Settings → API
+// ═══════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://oyvmlxtkxezlleiengap.supabase.co/rest/v1/';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95dm1seHRreGV6bGxlaWVuZ2FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5ODYyMDcsImV4cCI6MjA5NTU2MjIwN30.PEeKayo9_RD6LAAg35YPHEYbjN1hf1BzJ2LiLzgGrSY';
+// ═══════════════════════════════════════════════════════
+
+const isConfigured = !SUPABASE_URL.includes('XXXX') && !SUPABASE_KEY.includes('XXXX');
+
+// ── Supabase REST helpers ──────────────────────────────
+const sb = {
+  headers: () => ({
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + (sb._token || SUPABASE_KEY),
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  }),
+  _token: null,
+  _uid: null,
+
+  async signUp(email, pass) {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({email, password:pass})
+    });
+    return r.json();
+  },
+  async signIn(email, pass) {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({email, password:pass})
+    });
+    const d = await r.json();
+    if (d.access_token) { sb._token = d.access_token; sb._uid = d.user.id; }
+    return d;
+  },
+  async signOut() {
+    await fetch(`${SUPABASE_URL}/auth/v1/logout`, {method:'POST', headers:sb.headers()});
+    sb._token = null; sb._uid = null;
+  },
+  async restoreSession() {
+    const saved = localStorage.getItem('sb_session');
+    if (!saved) return null;
+    const s = JSON.parse(saved);
+    // refresh token
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({refresh_token: s.refresh_token})
+    });
+    const d = await r.json();
+    if (d.access_token) {
+      sb._token = d.access_token; sb._uid = d.user.id;
+      localStorage.setItem('sb_session', JSON.stringify(d));
+      return d.user;
+    }
+    localStorage.removeItem('sb_session');
+    return null;
+  },
+  async getProfile() {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${sb._uid}&select=*`, {headers:sb.headers()});
+    const d = await r.json();
+    return d[0] || null;
+  },
+  async upsertProfile(data) {
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+      method:'POST', headers:{...sb.headers(),'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body: JSON.stringify({user_id: sb._uid, ...data, updated_at: new Date().toISOString()})
+    });
+  },
+  async insertSession(data) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
+      method:'POST', headers:sb.headers(),
+      body: JSON.stringify({user_id: sb._uid, ...data})
+    });
+    return r.json();
+  },
+  async getSessions() {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/sessions?user_id=eq.${sb._uid}&order=created_at.desc&limit=20`,
+      {headers:sb.headers()}
+    );
+    return r.json();
+  }
+};
+
+// ── App state ──────────────────────────────────────────
+let currentUser = null;
+let selectedLang = null;
+let selectedCode = null;
+let chatHistory = [];
+let isTyping = false;
+let langProgress = {};
+let totalSessions = 0;
+let totalVocab = 0;
+let streak = 0;
+let authMode = 'login';
+
+const SYSTEM_PROMPT = `Eres "Tutor", un tutor experto, paciente, motivador y altamente estructurado de idiomas. Tu especialidad son: francés, italiano, portugués, latín clásico, gallego, catalán, vasco, alemán, japonés, chino y esperanto.
+
+Tu misión es ayudar al usuario a aprender idiomas de forma consistente, regular y gradual, logrando un progreso sólido a largo plazo.
+
+Reglas principales:
+- Progreso gradual y estructurado: Avanza paso a paso. Evalúa constantemente el nivel real.
+- Consistencia: Propón sesiones diarias cortas (10-25 minutos).
+- Repetición espaciada: Revisa vocabulario y estructuras de lecciones anteriores.
+- Las 4 habilidades en cada sesión: vocabulario, gramática, comprensión auditiva, expresión oral/escrita.
+- Idioma: Comunícate en español al principio. A medida que el usuario avance, aumenta progresivamente el idioma objetivo.
+
+Estructura de cada interacción:
+1. Saludo y seguimiento del progreso anterior
+2. Evaluación breve (1-2 preguntas de retención)
+3. Lección nueva (máximo 8-12 palabras o una regla gramatical)
+4. Práctica activa (completar frases, traducción, role-play)
+5. Producción (pide frases completas)
+6. Corrección amable con explicación del porqué
+7. Resumen y tarea corta para el día siguiente
+
+Estilo: amigable, entusiasta, motivador. Usa emojis con moderación. Respuestas máximo 220 palabras.
+
+IMPORTANTE: Al final de cada respuesta añade siempre estas dos líneas internas (el usuario no las ve):
+[VOCAB:+N] — N = número de palabras nuevas enseñadas en esta respuesta (0 si ninguna).
+[LEVEL:XX] — XX = nivel estimado actual del alumno: A0, A1, A1+, A2, A2+, B1, B1+, B2, C1.`;
+
+// ── Init ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  if (!isConfigured) {
+    // Show demo mode — auth skipped, no DB
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('configBanner').classList.add('visible');
+    document.getElementById('userEmail').textContent = 'Modo demo';
+    document.getElementById('footerUser').textContent = 'Configura Supabase para guardar progreso';
+    currentUser = {id:'demo', email:'demo'};
+    return;
+  }
+  // Try restoring session from localStorage
+  const user = await sb.restoreSession();
+  if (user) showApp(user);
+});
+
+// ── Auth UI ────────────────────────────────────────────
+window.toggleMode = () => {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('authBtn').textContent = authMode === 'register' ? 'Crear cuenta' : 'Entrar';
+  document.getElementById('authToggle').innerHTML = authMode === 'register'
+    ? '¿Ya tienes cuenta? <a onclick="toggleMode()">Inicia sesión</a>'
+    : '¿No tienes cuenta? <a onclick="toggleMode()">Regístrate gratis</a>';
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authMsg').style.display = 'none';
+};
+
+window.submitAuth = async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass  = document.getElementById('authPass').value;
+  if (!email || !pass) { showAuthErr('Rellena email y contraseña.'); return; }
+  const btn = document.getElementById('authBtn');
+  btn.textContent = '...'; btn.disabled = true;
+
+  try {
+    if (authMode === 'register') {
+      const d = await sb.signUp(email, pass);
+      if (d.error) throw new Error(d.error.message || d.msg);
+      showAuthInfo('✅ Cuenta creada. Revisa tu email para confirmar y luego inicia sesión.');
+    } else {
+      const d = await sb.signIn(email, pass);
+      if (d.error) throw new Error(d.error.message || d.msg);
+      localStorage.setItem('sb_session', JSON.stringify(d));
+      showApp({id: d.user.id, email: d.user.email});
+    }
+  } catch(e) {
+    showAuthErr(e.message);
+  }
+  btn.textContent = authMode === 'register' ? 'Crear cuenta' : 'Entrar';
+  btn.disabled = false;
+};
+
+window.logout = async () => {
+  await sb.signOut();
+  localStorage.removeItem('sb_session');
+  currentUser = null;
+  selectedLang = null; selectedCode = null;
+  chatHistory = []; langProgress = {};
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+};
+
+async function showApp(user) {
+  currentUser = user;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('userEmail').textContent = user.email;
+  document.getElementById('footerUser').textContent = user.email;
+  if (isConfigured && user.id !== 'demo') {
+    await loadProgress();
+    await loadHistory();
+  }
+}
+
+// ── Load progress ──────────────────────────────────────
+async function loadProgress() {
+  try {
+    const p = await sb.getProfile();
+    if (!p) return;
+    langProgress   = p.lang_progress || {};
+    totalSessions  = p.total_sessions || 0;
+    totalVocab     = p.total_vocab || 0;
+    streak         = p.streak || 0;
+    document.getElementById('statSessions').textContent = totalSessions;
+    document.getElementById('statVocab').textContent    = totalVocab;
+    document.getElementById('statStreak').textContent   = streak + ' 🔥';
+    for (const [code, info] of Object.entries(langProgress)) {
+      const el = document.getElementById('lv-' + code);
+      if (el && info.level) { el.textContent = info.level; el.parentElement.classList.add('has-progress'); }
+    }
+  } catch(e) { console.warn('loadProgress:', e); }
+}
+
+async function loadHistory() {
+  try {
+    const rows = await sb.getSessions();
+    if (!Array.isArray(rows) || !rows.length) return;
+    const list = document.getElementById('sessionList');
+    list.innerHTML = '';
+    rows.forEach(s => {
+      const date = new Date(s.created_at).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'});
+      const item = document.createElement('div');
+      item.className = 'session-item';
+      item.innerHTML = `
+        <div>
+          <div class="session-lang">${s.lang_flag||''} ${s.lang_name||'—'}</div>
+          <div class="session-meta">${date} · ${s.message_count||0} mensajes · Nivel ${s.level||'—'}</div>
+        </div>
+        <div class="session-badge">${s.vocab_learned||0} palabras</div>`;
+      list.appendChild(item);
+    });
+  } catch(e) { console.warn('loadHistory:', e); }
+}
+
+window.saveSession = async () => {
+  if (!selectedCode || !currentUser || currentUser.id === 'demo') {
+    showToast('Configura Supabase para guardar.', true); return;
+  }
+  const prog = langProgress[selectedCode] || {};
+  try {
+    await sb.insertSession({
+      lang_code:     selectedCode,
+      lang_name:     selectedLang,
+      lang_flag:     document.querySelector(`.lang-card[data-code="${selectedCode}"] .lang-flag`)?.textContent || '',
+      level:         prog.level || 'A0',
+      vocab_learned: prog.sessionVocab || 0,
+      message_count: chatHistory.length
+    });
+    totalSessions++;
+    totalVocab += prog.sessionVocab || 0;
+    streak = computeStreak();
+    await sb.upsertProfile({
+      lang_progress:  langProgress,
+      total_sessions: totalSessions,
+      total_vocab:    totalVocab,
+      streak,
+      last_active: new Date().toISOString()
+    });
+    if (prog) prog.sessionVocab = 0;
+    document.getElementById('statSessions').textContent = totalSessions;
+    document.getElementById('statVocab').textContent    = totalVocab;
+    document.getElementById('statStreak').textContent   = streak + ' 🔥';
+    document.getElementById('btnSave').classList.remove('visible');
+    showToast('✅ Sesión guardada en Supabase');
+    await loadHistory();
+  } catch(e) { showToast('❌ ' + e.message, true); }
+};
+
+function computeStreak() {
+  const last = localStorage.getItem('last_session_date');
+  const today = new Date().toDateString();
+  if (!last) { localStorage.setItem('last_session_date', today); return 1; }
+  const diff = (new Date(today) - new Date(last)) / 86400000;
+  localStorage.setItem('last_session_date', today);
+  if (diff <= 1) return (streak || 0) + 1;
+  return 1;
+}
+
+// ── Lang selection ─────────────────────────────────────
+window.selectLang = (el) => {
+  document.querySelectorAll('.lang-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedLang = el.dataset.lang;
+  selectedCode = el.dataset.code;
+  chatHistory = [];
+  const prog = langProgress[selectedCode] || {};
+  document.getElementById('statLang').textContent  = el.querySelector('.lang-name').textContent;
+  document.getElementById('statLevel').textContent = selectedLang + ' · Nivel ' + (prog.level || 'A0');
+  document.getElementById('btnSave').classList.add('visible');
+  const greeting = `Hola Tutor, quiero practicar ${selectedLang} hoy. Mi nivel actual es ${prog.level||'A0'} y llevo ${prog.vocab||0} palabras aprendidas.`;
+  addMsg('user', greeting);
+  callAPI(greeting);
+};
+
+// ── Chat ───────────────────────────────────────────────
+window.sendQuick = (t) => { document.getElementById('userInput').value = t; sendMessage(); };
+window.sendMessage = () => {
+  const inp = document.getElementById('userInput');
+  const t = inp.value.trim();
+  if (!t || isTyping) return;
+  inp.value = ''; inp.style.height = 'auto';
+  addMsg('user', t); callAPI(t);
+};
+
+function addMsg(role, content) {
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div'); div.className = 'msg ' + (role==='user'?'user':'tutor');
+  const av   = document.createElement('div'); av.className = 'msg-avatar'; av.textContent = role==='user'?'👤':'🎓';
+  const bub  = document.createElement('div'); bub.className = 'msg-bubble';
+  bub.innerHTML = content
+    .replace(/\[VOCAB:\+\d+\]/g,'').replace(/\[LEVEL:[^\]]+\]/g,'')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  div.appendChild(av); div.appendChild(bub); msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  chatHistory.push({role: role==='user'?'user':'assistant', content});
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div'); div.className='msg tutor'; div.id='typingInd';
+  const av = document.createElement('div'); av.className='msg-avatar'; av.textContent='🎓';
+  const t = document.createElement('div'); t.className='typing'; t.innerHTML='<span></span><span></span><span></span>';
+  div.appendChild(av); div.appendChild(t); msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function hideTyping() { const t=document.getElementById('typingInd'); if(t)t.remove(); }
+
+async function callAPI(userText) {
+  if (isTyping) return;
+  isTyping = true; document.getElementById('sendBtn').disabled = true;
+  showTyping();
+  const prog = langProgress[selectedCode] || {};
+  const ctx = selectedLang
+    ? `[Idioma: ${selectedLang} | Nivel: ${prog.level||'A0'} | Vocabulario acumulado: ${prog.vocab||0} palabras]`
+    : '';
+  const msgs = chatHistory.slice(-14).map(m=>({role:m.role,content:m.content}));
+  if (msgs.length && msgs[msgs.length-1].role==='user')
+    msgs[msgs.length-1]={role:'user',content:ctx+'\n\n'+userText};
+  else msgs.push({role:'user',content:ctx+'\n\n'+userText});
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYSTEM_PROMPT,messages:msgs})
+    });
+    const data = await res.json();
+    hideTyping();
+    if (data.content?.[0]) {
+      const reply = data.content[0].text;
+      // Parse internal tags
+      const vm = reply.match(/\[VOCAB:\+(\d+)\]/);
+      const lm = reply.match(/\[LEVEL:([^\]]+)\]/);
+      if (vm && selectedCode) {
+        const n = parseInt(vm[1]);
+        if (!langProgress[selectedCode]) langProgress[selectedCode]={};
+        langProgress[selectedCode].vocab = (langProgress[selectedCode].vocab||0)+n;
+        langProgress[selectedCode].sessionVocab = (langProgress[selectedCode].sessionVocab||0)+n;
+        document.getElementById('statVocab').textContent =
+          Object.values(langProgress).reduce((s,l)=>s+(l.vocab||0),0);
+      }
+      if (lm && selectedCode) {
+        const lv = lm[1].trim();
+        if (!langProgress[selectedCode]) langProgress[selectedCode]={};
+        langProgress[selectedCode].level = lv;
+        document.getElementById('statLevel').textContent = selectedLang+' · Nivel '+lv;
+        const lvEl = document.getElementById('lv-'+selectedCode);
+        if (lvEl) { lvEl.textContent=lv; lvEl.parentElement.classList.add('has-progress'); }
+      }
+      addMsg('tutor', reply);
+    } else {
+      addMsg('tutor','Hubo un problema al conectar con el tutor. Inténtalo de nuevo.');
+    }
+  } catch(e) {
+    hideTyping();
+    addMsg('tutor','Error de conexión. Comprueba tu red e inténtalo de nuevo.');
+  }
+  isTyping=false; document.getElementById('sendBtn').disabled=false;
+}
+
+// ── Toast / auth helpers ───────────────────────────────
+function showToast(msg, err=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(err?' error':'');
+  setTimeout(()=>{t.className='toast';},3200);
+}
+function showAuthErr(msg){ const e=document.getElementById('authError'); e.textContent=msg; e.style.display='block'; }
+function showAuthInfo(msg){ const e=document.getElementById('authMsg'); e.textContent=msg; e.style.display='block'; }
+</script>
+</body>
+</html>
